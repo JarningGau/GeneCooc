@@ -24,3 +24,22 @@ devtools::install_github("JarningGau/GeneCooc")
 
 Note: `GeneCooc` is compitable with Seurat V4, we did not test the codes
 on Seurat V5.
+
+## Quick start
+
+``` r
+## 1. Calculate the gene to cell distance and rank the genes by this distance for each cell.
+seu <- CalGeneRankings(seu, min.expr.cells = 100)
+## 2. Calculate the gene affinity matrix. The gene affinity is measured by cooccurance ratio.
+seu <- CalAffinityMatrix(seu, K = 200, min.freq = 10)
+## 3. Find modules. The major modules are divided by louvain cluster on gene-gene coexpression 
+##    graph defined by gene affinity matrix. Then minor modules are divided using the dynamic 
+##    tree cut on a hierarchical tree for each major module.
+seu <- FindModules(seu)
+## 4. Trim the minor modules by archytype analysis.
+seu <- TrimModules(seu)
+## 5. Merge the similary minor modules automaticall。
+seu <- AutoMergeModules(seu, acc.threshold = 0.99)
+## 6. Scoring each gene module.
+seu <- CalModuleScore(seu)
+```
