@@ -4,21 +4,13 @@
 \alias{AutoMergeModules}
 \title{Auto Merge Modules Function}
 \usage{
-AutoMergeModules(
-  object,
-  acc.threshold = 0.9,
-  min.size = 2,
-  module.source = "GeneCooc"
-)
+AutoMergeModules(object, acc.threshold = 0.9, module.source = "GeneCooc")
 }
 \arguments{
 \item{object}{A Seurat object.}
 
 \item{acc.threshold}{The accuracy threshold for merging modules, two modules will merge
 if the classification accuracy less than this value; defaults to 0.9.}
-
-\item{min.size}{Minimal size of gene module for module merging. If one of two gene modules
-to be merged less than this value, it will merge them without consideration of \code{acc.threshold} Default: 2.}
 
 \item{module.source}{A character string indicating where to save results of \code{GeneCooc}. Default is "GeneCooc".}
 }
