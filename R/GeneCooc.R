@@ -313,6 +313,7 @@ RunModuleUMAP <- function(object, exclude.trimmed=TRUE, supervised=FALSE, module
 #' and embeddings from MCA.
 #' @param ndim.mca The number of dimensions to use from the multiple correspondence analysis
 #' (MCA) embeddings for calculating the module scores. Default is 30 dimensions.
+#' @param min.size Minimal size of the gene set for calculating the module score. Default: 10.
 #' @param module.source A character string indicating where to load tmp results and save final results
 #' of `GeneCooc`. Default is "GeneCooc".
 #'
@@ -322,7 +323,7 @@ RunModuleUMAP <- function(object, exclude.trimmed=TRUE, supervised=FALSE, module
 #' TODO calculate module scores for a given gene module list
 #' @export
 #'
-CalModuleScore <- function(object, ndim.mca=30, module.source="GeneCooc") {
+CalModuleScore <- function(object, ndim.mca=30, min.size=10, module.source="GeneCooc") {
   ## fetch data
   mods <- Misc(object)[[module.source]]$gene.module
   mods <- subset(mods, is.kept) ## drop the trimmed genes
@@ -335,6 +336,9 @@ CalModuleScore <- function(object, ndim.mca=30, module.source="GeneCooc") {
   colnames(Z) <- rownames(X) # cols: cells
   ## calculate module score
   module.list <- FetchModuleList(object, module.source = module.source, module.type = "both")
+  module.size <- sapply(module.list, length)
+  module.used <- names(module.size)[module.size >= min.size]
+  module.list <- module.list[module.used]
   M <- sapply(module.list, function(xx) {
     as.numeric(rownames(Z) %in% xx)
   })
