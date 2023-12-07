@@ -51,6 +51,7 @@ FetchAffinityMatrix <- function(object, module.source="GeneCooc"){
 #' object. The list is organized based on the major and minor module categories, if applicable.
 #'
 #' @export
+#' TODO: unbound names will cause bugs, solve these unbound names.
 FetchModuleList <- function(object, module.source="GeneCooc", module.type="both") {
   mods <- FetchModuleDF(object, module.source)
   mods <- subset(mods, is.kept) ## drop the trimmed genes
@@ -77,4 +78,29 @@ FetchModuleList <- function(object, module.source="GeneCooc", module.type="both"
   return(module.list)
 }
 
+
+#' Fetch Archetype Genes from Seurat Object
+#'
+#' @description
+#' Retrieves a list of archetype genes from a Seurat object based on the specified module source
+#' and modules. This function returns a vector of gene names that are marked as archetype genes
+#' within the specified modules in the given Seurat object.
+#'
+#' @param object A Seurat object.
+#' @param modules A vector of module names specifying which modules to consider when retrieving
+#' archetype genes.
+#' @param module.source A string specifying the key or named list within the Seurat object from
+#' which to retrieve the module information. The default value is "GeneCooc".
+#'
+#' @return A named vector of genes.
+#'
+#' @export
+FetchArchetypeGenes <- function(object, modules, module.source="GeneCooc") {
+  mods <- FetchModuleDF(object, module.source)
+  mods <- subset(mods, is.archetype)
+  mods <- subset(mods, minor.module.full.before.merge %in% modules)
+  genes <- mods$gene.name
+  names(genes) <- modules
+  return(genes)
+}
 
