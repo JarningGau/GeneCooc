@@ -27,19 +27,45 @@ on Seurat V5.
 
 ## Quick start
 
+1.  Calculate the gene to cell distance and rank the genes by this
+    distance for each cell.
+
 ``` r
-## 1. Calculate the gene to cell distance and rank the genes by this distance for each cell.
 seu <- CalGeneRankings(seu, min.expr.cells = 100)
-## 2. Calculate the gene affinity matrix. The gene affinity is measured by cooccurance ratio.
+```
+
+2.  Calculate the gene affinity matrix. The gene affinity is measured by
+    co-occurance ratio.
+
+``` r
 seu <- CalAffinityMatrix(seu, K = 200, min.freq = 10)
-## 3. Find modules. The major modules are divided by louvain cluster on gene-gene coexpression 
-##    graph defined by gene affinity matrix. Then minor modules are divided using the dynamic 
-##    tree cut on a hierarchical tree for each major module.
+```
+
+3.  Find modules.
+
+The major modules are divided by louvain cluster on gene-gene
+coexpression graph defined by gene affinity matrix. Then minor modules
+are divided using the dynamic tree cut on a hierarchical tree for each
+major module.
+
+``` r
 seu <- FindModules(seu)
-## 4. Trim the minor modules by archytype analysis.
+```
+
+4.  Trim the minor modules by archytype analysis.
+
+``` r
 seu <- TrimModules(seu)
-## 5. Merge the similary minor modules automaticall。
-seu <- AutoMergeModules(seu, acc.threshold = 0.99)
-## 6. Scoring each gene module.
+```
+
+5.  Merge the similary minor modules automaticall。
+
+``` r
+seu <- AutoMergeModules(seu)
+```
+
+6.  Scoring each gene module.
+
+``` r
 seu <- CalModuleScore(seu)
 ```
