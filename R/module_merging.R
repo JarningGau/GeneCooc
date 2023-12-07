@@ -1,3 +1,6 @@
+#' @include getters_and_setters.R
+NULL
+
 .ModulePairDist <- function(A, module.list, module.1, module.2) {
   genes.1 <- module.list[[module.1]]
   genes.2 <- module.list[[module.2]]

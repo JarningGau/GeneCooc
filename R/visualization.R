@@ -1,3 +1,7 @@
+#' @include getters_and_setters.R
+NULL
+
+
 #' Visualize Gene Modules on UMAP Plot
 #'
 #' Creates a UMAP plot to display gene modules as colored points. The plot can be customized with
