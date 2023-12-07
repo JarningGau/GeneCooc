@@ -1,0 +1,39 @@
+---
+output: github_document
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.path = "man/figures/README-",
+  out.width = "100%"
+)
+```
+
+```{r echo=FALSE, results="hide", message=FALSE}
+library("badger")
+```
+
+# GeneCooc
+
+[![Project Status: Active - The project has reached a stable, usable state and is being actively developed.](http://www.repostatus.org/badges/latest/active.svg)](http://www.repostatus.org/#active)
+`r badge_devel("jarninggau/GeneCooc", "green")`
+
+GeneCooc is an ultra-fast R package for gene co-expression module discovery facilitates cell state identification.
+
+
+## Installation
+
+You can install the development version of `GeneCooc` from [GitHub](https://github.com/) with:
+
+``` r
+# install.packages("devtools")
+# install CelliD
+devtools::install_github("RausellLab/CelliD")
+# install GeneCooc
+devtools::install_github("JarningGau/GeneCooc")
+```
+
+Note: `GeneCooc` is compitable with Seurat V4, we did not test the codes on Seurat V5.
+
