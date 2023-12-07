@@ -112,13 +112,15 @@ MergeModules <- function(object, module.1, module.2, module.source="GeneCooc") {
 #' @param object A Seurat object.
 #' @param acc.threshold The accuracy threshold for merging modules, two modules will merge
 #' if the classification accuracy less than this value; defaults to 0.9.
+#' @param min.size Minimal size of gene module for module merging. If one of two gene modules
+#' to be merged less than this value, it will merge them without consideration of `acc.threshold` Default: 2.
 #' @param module.source A character string indicating where to save results of `GeneCooc`. Default is "GeneCooc".
 #'
 #' @return A modified Seurat object.
 #'
 #' @export
 #'
-AutoMergeModules <- function(object, acc.threshold=0.9, module.source="GeneCooc"){
+AutoMergeModules <- function(object, acc.threshold=0.9, min.size=2, module.source="GeneCooc"){
   ## fetch data
   module.list <- FetchModuleList(object, module.source, module.type = "major")
   for (major.module in names(module.list)) {
@@ -131,7 +133,7 @@ AutoMergeModules <- function(object, acc.threshold=0.9, module.source="GeneCooc"
         paired.module <- NextRelatedModulePairs(object, module.source, major.module, do.plot = F)
         acc <- EstimateAccuracy(object, paired.module[1], paired.module[2], module.source, do.plot = F)
         message(glue::glue("Accuracy of {paired.module[1]} and {paired.module[2]}: {round(acc,3)}"))
-        if (acc < acc.threshold) {
+        if (acc < acc.threshold || length(paired.module[1]) <= min.size || length(paired.module[2]) <= min.size) {
           object <- MergeModules(object, paired.module[1], paired.module[2], module.source)
         }
         n.minor.modules <- .StatMinorModules(object, module.source, major.module)
