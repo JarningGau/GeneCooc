@@ -102,6 +102,22 @@ MergeModules <- function(object, module.1, module.2, module.source="GeneCooc") {
   return(n.minor.modules)
 }
 
+#' Auto Merge Modules Function
+#'
+#' @description
+#' This function iteratively merges minor modules within major modules based on an accuracy
+#' threshold until all minor modules are processed or accuracy is no longer improved beyond the
+#' threshold.
+#'
+#' @param object A Seurat object.
+#' @param acc.threshold The accuracy threshold for merging modules, two modules will merge
+#' if the classification accuracy less than this value; defaults to 0.9.
+#' @param module.source A character string indicating where to save results of `GeneCooc`. Default is "GeneCooc".
+#'
+#' @return A modified Seurat object.
+#'
+#' @export
+#'
 AutoMergeModules <- function(object, acc.threshold=0.9, module.source="GeneCooc"){
   ## fetch data
   module.list <- FetchModuleList(object, module.source, module.type = "major")
