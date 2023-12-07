@@ -4,7 +4,12 @@
 \alias{CalModuleScore}
 \title{Calculate Module Scores for Cells in a Seurat Object}
 \usage{
-CalModuleScore(object, ndim.mca = 30, module.source = "GeneCooc")
+CalModuleScore(
+  object,
+  ndim.mca = 30,
+  min.size = 10,
+  module.source = "GeneCooc"
+)
 }
 \arguments{
 \item{object}{A Seurat object containing gene module data in its \code{misc} slot,
@@ -12,6 +17,8 @@ and embeddings from MCA.}
 
 \item{ndim.mca}{The number of dimensions to use from the multiple correspondence analysis
 (MCA) embeddings for calculating the module scores. Default is 30 dimensions.}
+
+\item{min.size}{Minimal size of the gene set for calculating the module score. Default: 10.}
 
 \item{module.source}{A character string indicating where to load tmp results and save final results
 of \code{GeneCooc}. Default is "GeneCooc".}
