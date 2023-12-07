@@ -68,7 +68,7 @@ CalGeneRankings <- function(
     features.use <- intersect(features.use, VariableFeatures(object))
   }
   ## run MCA
-  object <- CelliD::RunMCA(object, features = features.use)
+  object <- CelliD::RunMCA(object, features = features.use, nmcs = ndim.mca)
   gene.rankings <- CelliD::GetCellGeneRanking(object, dims = 1:ndim.mca)
   ## set results to object@misc slot
   object@misc[[module.source]] <- list(
