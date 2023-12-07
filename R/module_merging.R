@@ -133,7 +133,7 @@ AutoMergeModules <- function(object, acc.threshold=0.9, min.size=2, module.sourc
         paired.module <- NextRelatedModulePairs(object, module.source, major.module, do.plot = F)
         acc <- EstimateAccuracy(object, paired.module[1], paired.module[2], module.source, do.plot = F)
         message(glue::glue("Accuracy of {paired.module[1]} and {paired.module[2]}: {round(acc,3)}"))
-        if (acc < acc.threshold || length(paired.module[1]) <= min.size || length(paired.module[2]) <= min.size) {
+        if (acc < acc.threshold) {
           object <- MergeModules(object, paired.module[1], paired.module[2], module.source)
         }
         n.minor.modules <- .StatMinorModules(object, module.source, major.module)
