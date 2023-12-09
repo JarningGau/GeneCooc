@@ -320,7 +320,7 @@ RunModuleUMAP <- function(object, exclude.trimmed=TRUE, supervised=FALSE, module
 #' @return Seurat object updated with a new assay slot named `module.score` containing the
 #' calculated scores for each module and cell.
 #'
-#' TODO calculate module scores for a given gene module list
+# TODO calculate module scores for a given gene module list
 #' @export
 #'
 CalModuleScore <- function(object, ndim.mca=30, min.size=10, module.source="GeneCooc") {

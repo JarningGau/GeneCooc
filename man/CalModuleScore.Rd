@@ -26,8 +26,6 @@ of \code{GeneCooc}. Default is "GeneCooc".}
 \value{
 Seurat object updated with a new assay slot named \code{module.score} containing the
 calculated scores for each module and cell.
-
-TODO calculate module scores for a given gene module list
 }
 \description{
 Computes scores for gene modules in each cell based on multiple correspondence analysis (MCA)

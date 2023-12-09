@@ -49,9 +49,8 @@ FetchAffinityMatrix <- function(object, module.source="GeneCooc"){
 #'
 #' @return A list of gene names associated with the specified module source and type in the Seurat
 #' object. The list is organized based on the major and minor module categories, if applicable.
-#'
+# TODO: unbound names will cause bugs, solve these unbound names.
 #' @export
-#' TODO: unbound names will cause bugs, solve these unbound names.
 FetchModuleList <- function(object, module.source="GeneCooc", module.type="both") {
   mods <- FetchModuleDF(object, module.source)
   mods <- subset(mods, is.kept) ## drop the trimmed genes
