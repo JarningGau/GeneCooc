@@ -311,19 +311,20 @@ RunModuleUMAP <- function(object, exclude.trimmed=TRUE, supervised=FALSE, module
 #'
 #' @param object A Seurat object containing gene module data in its `misc` slot,
 #' and embeddings from MCA.
+#' @param modules A data.frame containing two columns named `gene_name`, `module_name`,
+#' and one optional column named `weight`. Default: NULL.
 #' @param ndim.mca The number of dimensions to use from the multiple correspondence analysis
-#' (MCA) embeddings for calculating the module scores. Default is 30 dimensions.
+#' (MCA) embeddings for calculating the module scores. Default: 30.
 #' @param min.size Minimal size of the gene set for calculating the module score. Default: 10.
 #' @param module.source A character string indicating where to load tmp results and save final results
-#' of `GeneCooc`. Default is "GeneCooc".
+#' of `GeneCooc`. Default: "GeneCooc".
 #'
 #' @return Seurat object updated with a new assay slot named `module.score` containing the
 #' calculated scores for each module and cell.
 #'
-# TODO calculate module scores for a given gene module list
 #' @export
 #'
-CalModuleScore <- function(object, ndim.mca=30, min.size=10, module.source="GeneCooc") {
+CalModuleScore <- function(object, modules=NULL, ndim.mca=30, min.size=10, module.source="GeneCooc") {
   ## fetch data
   mods <- Misc(object)[[module.source]]$gene.module
   mods <- subset(mods, is.kept) ## drop the trimmed genes
@@ -335,13 +336,28 @@ CalModuleScore <- function(object, ndim.mca=30, min.size=10, module.source="Gene
   rownames(Z) <- rownames(Y) # rows: genes
   colnames(Z) <- rownames(X) # cols: cells
   ## calculate module score
-  module.list <- FetchModuleList(object, module.source = module.source, module.type = "both")
-  module.size <- sapply(module.list, length)
-  module.used <- names(module.size)[module.size >= min.size]
-  module.list <- module.list[module.used]
-  M <- sapply(module.list, function(xx) {
-    as.numeric(rownames(Z) %in% xx)
-  })
+  if (is.null(modules)) {
+    module.list <- FetchModuleList(object, module.source = module.source, module.type = "both")
+    module.list <- .ModulesFilter(module.list, min.size)
+    M <- sapply(module.list, function(xx) as.numeric(rownames(Z) %in% xx))
+  } else if (ncol(modules) == 2) {
+    module.list <- split(modules[[1]], modules[[2]])
+    module.list <- .ModulesFilter(module.list, min.size)
+    M <- sapply(module.list, function(xx) as.numeric(rownames(Z) %in% xx))
+  } else if (ncol(modules) == 3) {
+    module.list <- split(modules[[1]], modules[[2]])
+    weight.list <- split(modules[[3]], modules[[2]])
+    module.list <- .ModulesFilter(module.list, min.size)
+    weight.list <- .ModulesFilter(weight.list, min.size)
+    M <- sapply(seq_along(module.list), function(idx) {
+      w <- weight.list[idx]
+      names(w) <- module.list[[idx]]
+      w <- w[rownames(Z)]
+      w[is.na(w)] <- 0
+      unname(w)
+    })
+    colnames(M) <- names(module.list)
+  }
   ## module score
   ## Z(n.genes, n.cells), M(n.genes, n.modules), score(n.cells, n.modules)
   score <- crossprod(Z, M) ## t(Z) %*% M
@@ -350,3 +366,9 @@ CalModuleScore <- function(object, ndim.mca=30, min.size=10, module.source="Gene
   return(object)
 }
 
+
+.ModulesFilter <- function(module.list, min.size) {
+  module.size <- sapply(module.list, length)
+  module.used <- names(module.size)[module.size >= min.size]
+  return(module.list[module.used])
+}

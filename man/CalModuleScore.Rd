@@ -6,6 +6,7 @@
 \usage{
 CalModuleScore(
   object,
+  modules = NULL,
   ndim.mca = 30,
   min.size = 10,
   module.source = "GeneCooc"
@@ -15,13 +16,16 @@ CalModuleScore(
 \item{object}{A Seurat object containing gene module data in its \code{misc} slot,
 and embeddings from MCA.}
 
+\item{modules}{A data.frame containing two columns named \code{gene_name}, \code{module_name},
+and one optional column named \code{weight}. Default: NULL.}
+
 \item{ndim.mca}{The number of dimensions to use from the multiple correspondence analysis
-(MCA) embeddings for calculating the module scores. Default is 30 dimensions.}
+(MCA) embeddings for calculating the module scores. Default: 30.}
 
 \item{min.size}{Minimal size of the gene set for calculating the module score. Default: 10.}
 
 \item{module.source}{A character string indicating where to load tmp results and save final results
-of \code{GeneCooc}. Default is "GeneCooc".}
+of \code{GeneCooc}. Default: "GeneCooc".}
 }
 \value{
 Seurat object updated with a new assay slot named \code{module.score} containing the
