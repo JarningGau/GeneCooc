@@ -326,38 +326,49 @@ RunModuleUMAP <- function(object, exclude.trimmed=TRUE, supervised=FALSE, module
 #'
 CalModuleScore <- function(object, modules=NULL, ndim.mca=30, min.size=10, module.source="GeneCooc") {
   ## fetch data
-  mods <- Misc(object)[[module.source]]$gene.module
-  mods <- subset(mods, is.kept) ## drop the trimmed genes
+  if (is.null(modules)) {
+    mods <- Misc(object)[[module.source]]$gene.module
+    mods <- subset(mods, is.kept) ## drop the trimmed genes
+    Y <- Loadings(object, reduction = "mca")[rownames(mods), 1:ndim.mca]
+  } else {
+    Y <- Loadings(object, reduction = "mca")[, 1:ndim.mca]
+    genes.not.found <- setdiff(modules[[1]], rownames(Y))
+    if (length(genes.not.found) > 0) {
+      n.genes <- length(genes.not.found)
+      gene.list <- paste0(genes.not.found, collapse = ",")
+      warning(glue::glue("{n.genes} gene(s) were not found: {gene.list}"))
+    }
+    modules <- modules[modules[[1]] %in% rownames(Y), ]
+  }
   X <- Embeddings(object, reduction = "mca")[, 1:ndim.mca]
-  Y <- Loadings(object, reduction = "mca")[rownames(mods), 1:ndim.mca]
-  ## calculate gene to cell distance
-  Z <- proxy::dist(X, Y, method = "Euclidean")
-  Z <- scale(t(1/Z))
-  rownames(Z) <- rownames(Y) # rows: genes
-  colnames(Z) <- rownames(X) # cols: cells
-  ## calculate module score
+  ## module matrix
   if (is.null(modules)) {
     module.list <- FetchModuleList(object, module.source = module.source, module.type = "both")
     module.list <- .ModulesFilter(module.list, min.size)
-    M <- sapply(module.list, function(xx) as.numeric(rownames(Z) %in% xx))
+    M <- sapply(module.list, function(xx) as.numeric(rownames(Y) %in% xx))
   } else if (ncol(modules) == 2) {
     module.list <- split(modules[[1]], modules[[2]])
     module.list <- .ModulesFilter(module.list, min.size)
-    M <- sapply(module.list, function(xx) as.numeric(rownames(Z) %in% xx))
+    M <- sapply(module.list, function(xx) as.numeric(rownames(Y) %in% xx))
   } else if (ncol(modules) == 3) {
     module.list <- split(modules[[1]], modules[[2]])
     weight.list <- split(modules[[3]], modules[[2]])
     module.list <- .ModulesFilter(module.list, min.size)
     weight.list <- .ModulesFilter(weight.list, min.size)
     M <- sapply(seq_along(module.list), function(idx) {
-      w <- weight.list[idx]
+      w <- weight.list[[idx]]
       names(w) <- module.list[[idx]]
-      w <- w[rownames(Z)]
+      w <- w[rownames(Y)]
       w[is.na(w)] <- 0
       unname(w)
     })
     colnames(M) <- names(module.list)
   }
+  ## calculate gene to cell distance
+  Z <- proxy::dist(X, Y, method = "Euclidean")
+  Z <- scale(t(1/Z))
+  rownames(Z) <- rownames(Y) # rows: genes
+  colnames(Z) <- rownames(X) # cols: cells
   ## module score
   ## Z(n.genes, n.cells), M(n.genes, n.modules), score(n.cells, n.modules)
   score <- crossprod(Z, M) ## t(Z) %*% M
@@ -370,5 +381,9 @@ CalModuleScore <- function(object, modules=NULL, ndim.mca=30, min.size=10, modul
 .ModulesFilter <- function(module.list, min.size) {
   module.size <- sapply(module.list, length)
   module.used <- names(module.size)[module.size >= min.size]
-  return(module.list[module.used])
+  module.list <- module.list[module.used]
+  if (length(module.list) == 0) {
+    stop(glue::glue("0 of {length(module.size)} modules's size >= {min.size}. Try to set a lower `min.size`."))
+  }
+  return(module.list)
 }
