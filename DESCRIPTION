@@ -4,17 +4,9 @@ Version: 0.0.0.9000
 Authors@R: 
     person("Jianing", "Gao", , "gjn1106@mail.ustc.edu.cn", role = c("aut", "cre"),
            comment = c(ORCID = "0000-0001-6599-2133"))
-Description: GeneCooc: GeneCooc: an ultra-fast tool for gene co-expression module discovery facilitates cell state identification.
+Description: GeneCooc: GeneCooc: an ultra-fast tool for gene co-expression
+    module discovery facilitates cell state identification.
 License: MIT + file LICENSE
-Encoding: UTF-8
-Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.2.3
-Collate: 
-    'getters_and_setters.R'
-    'GeneCooc.R'
-    'module_merging.R'
-    'variance_decomposition.R'
-    'visualization.R'
 Imports: 
     magrittr (>= 2.0.3),
     Seurat
@@ -32,3 +24,12 @@ Suggests:
     pheatmap (>= 1.0.12),
     proxy (>= 0.4.27),
     uwot (>= 0.1.16)
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.2.3
+Collate: 
+    'getters_and_setters.R'
+    'GeneCooc.R'
+    'module_merging.R'
+    'variance_decomposition.R'
+    'visualization.R'
