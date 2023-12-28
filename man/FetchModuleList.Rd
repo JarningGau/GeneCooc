@@ -4,7 +4,12 @@
 \alias{FetchModuleList}
 \title{Fetch Gene Module List From Seurat Object}
 \usage{
-FetchModuleList(object, module.source = "GeneCooc", module.type = "both")
+FetchModuleList(
+  object,
+  module.source = "GeneCooc",
+  module.type = "both",
+  module.size = 10
+)
 }
 \arguments{
 \item{object}{A Seurat object.}
@@ -15,6 +20,8 @@ which to retrieve the module information. The default value is "GeneCooc".}
 \item{module.type}{A string specifying the type of gene modules to include in the output list:
 "both" for both major and minor modules, "major" for major modules only, or "minor" for minor modules
 only. The default value is "both".}
+
+\item{module.size}{Only returns the modules with sizes more than \code{module.size}. Default: 10.}
 }
 \value{
 A list of gene names associated with the specified module source and type in the Seurat

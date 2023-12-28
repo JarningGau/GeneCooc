@@ -46,12 +46,13 @@ FetchAffinityMatrix <- function(object, module.source="GeneCooc"){
 #' @param module.type A string specifying the type of gene modules to include in the output list:
 #' "both" for both major and minor modules, "major" for major modules only, or "minor" for minor modules
 #' only. The default value is "both".
+#' @param module.size Only returns the modules with sizes more than `module.size`. Default: 10.
 #'
 #' @return A list of gene names associated with the specified module source and type in the Seurat
 #' object. The list is organized based on the major and minor module categories, if applicable.
 # TODO: unbound names will cause bugs, solve these unbound names.
 #' @export
-FetchModuleList <- function(object, module.source="GeneCooc", module.type="both") {
+FetchModuleList <- function(object, module.source="GeneCooc", module.type="both", module.size=10) {
   mods <- FetchModuleDF(object, module.source)
   mods <- subset(mods, is.kept) ## drop the trimmed genes
   major.modules <- sort(unique(mods$module))
@@ -74,6 +75,8 @@ FetchModuleList <- function(object, module.source="GeneCooc", module.type="both"
   } else {
     stop("Invalid parameter: module.type should be one of 'both', 'major' or 'minor'.")
   }
+  module.sizes <- sapply(module.list, length)
+  module.list <- module.list[module.sizes >= module.size]
   return(module.list)
 }
 
@@ -101,5 +104,31 @@ FetchArchetypeGenes <- function(object, modules, module.source="GeneCooc") {
   genes <- mods$gene.name
   names(genes) <- modules
   return(genes)
+}
+
+
+#' Rescue Specified Modules
+#'
+#' @description
+#' This function "rescues" certain gene modules in a Seurat object by marking them as kept,
+#' effectively including them for further analysis or consideration. The specified modules
+#' are altered to have their `is.kept` status set to `TRUE` within the module source data.
+#'
+#' @param object A Seurat object containing various types of data, including gene module information.
+#' @param modules A character vector of minor module names (`minor.module.full`) to be marked as kept
+#'  within the Seurat
+#' object.
+#' @param module.source A string specifying the name of the list key within the Seurat object's
+#' `@misc` slot from which gene module information should be fetched and updated.
+#' The default value is "GeneCooc".
+#'
+#' @return The modified Seurat object with the specified subset of modules marked as "kept".
+#'
+#' @export
+RescueModules <- function(object, modules, module.source="GeneCooc") {
+  mods <- FetchModuleDF(object, module.source)
+  mods[mods$minor.module.full %in% modules, "is.kept"] = TRUE
+  object@misc[[module.source]]$gene.module <- mods
+  return(object)
 }
 
