@@ -128,9 +128,10 @@ CalAffinityMatrix <- function(object, K=500, min.freq=10, module.source="GeneCoo
   ## trim genes
   message("Trimming genes ...")
   idx <- diag(A) >= min.freq
-  A <- A[idx, idx]
+  n.total.genes <- nrow(A)
   n.dropped.genes <- table(idx)['FALSE']
-  message(glue::glue("{n.dropped.genes} of {nrow(A)} genes appeared less than {min.freq} times were dropped."))
+  message(glue::glue("{n.dropped.genes} of {n.total.genes} genes appeared less than {min.freq} times were dropped."))
+  A <- A[idx, idx]
   message("Normalizing ...")
   A <- apply(A, 2, function(xx) xx / max(xx))
   A <- (A + t(A)) / 2
