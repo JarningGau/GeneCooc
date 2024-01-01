@@ -16,8 +16,8 @@ You can install the development version of `GeneCooc` from
 
 ``` r
 # install.packages("devtools")
-# install CelliD
-devtools::install_github("RausellLab/CelliD")
+# install CelliD (Seurat V4)
+devtools::install_github("RausellLab/CelliD", ref="e306b43")
 # install GeneCooc
 devtools::install_github("JarningGau/GeneCooc")
 ```
