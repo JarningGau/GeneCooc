@@ -46,13 +46,13 @@ FetchAffinityMatrix <- function(object, module.source="GeneCooc"){
 #' @param module.type A string specifying the type of gene modules to include in the output list:
 #' "both" for both major and minor modules, "major" for major modules only, or "minor" for minor modules
 #' only. The default value is "both".
-#' @param module.size Only returns the modules with sizes more than `module.size`. Default: 10.
+#' @param module.size Only returns the modules with sizes more than `module.size`. Default: 0.
 #'
 #' @return A list of gene names associated with the specified module source and type in the Seurat
 #' object. The list is organized based on the major and minor module categories, if applicable.
 # TODO: unbound names will cause bugs, solve these unbound names.
 #' @export
-FetchModuleList <- function(object, module.source="GeneCooc", module.type="both", module.size=10) {
+FetchModuleList <- function(object, module.source="GeneCooc", module.type="both", module.size=0) {
   mods <- FetchModuleDF(object, module.source)
   mods <- subset(mods, is.kept) ## drop the trimmed genes
   major.modules <- sort(unique(mods$module))

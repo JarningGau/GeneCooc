@@ -8,7 +8,7 @@ FetchModuleList(
   object,
   module.source = "GeneCooc",
   module.type = "both",
-  module.size = 10
+  module.size = 0
 )
 }
 \arguments{
@@ -21,7 +21,7 @@ which to retrieve the module information. The default value is "GeneCooc".}
 "both" for both major and minor modules, "major" for major modules only, or "minor" for minor modules
 only. The default value is "both".}
 
-\item{module.size}{Only returns the modules with sizes more than \code{module.size}. Default: 10.}
+\item{module.size}{Only returns the modules with sizes more than \code{module.size}. Default: 0.}
 }
 \value{
 A list of gene names associated with the specified module source and type in the Seurat
