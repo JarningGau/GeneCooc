@@ -132,9 +132,13 @@ CalAffinityMatrix <- function(object, K=500, min.freq=10, module.source="GeneCoo
   n.dropped.genes <- table(idx)['FALSE']
   message(glue::glue("{n.dropped.genes} of {n.total.genes} genes appeared less than {min.freq} times were dropped."))
   A <- A[idx, idx]
-  message("Normalizing ...")
-  A <- apply(A, 2, function(xx) xx / max(xx))
-  A <- (A + t(A)) / 2
+  message("Calculating Jaccard index ...")
+  n.cells <- length(sentences)
+  A_logit <- apply(A, 1, function(xx) (xx * n.cells) / (max(xx) * diag(A))) # logit
+  A <- apply(A, 1, function(xx) 2*xx / (max(xx) + diag(A))) ## jaccard index
+  A[A_logit < 1] <- 0
+  # A <- apply(A, 2, function(xx) xx / max(xx))
+  # A <- (A + t(A)) / 2
   ## write results into Seurat object
   object@misc[[module.source]]$affinity.matrix <- A
   return(object)
@@ -166,7 +170,7 @@ FindModules <- function(object, k=50, resolution=0.1, min.module.size=10, module
   A <- Misc(object)[[module.source]]$affinity.matrix
   dissM <- 1 - A
   ## find major modules
-  g <- Seurat::FindNeighbors(as.dist(dissM), k.param = 50)
+  g <- Seurat::FindNeighbors(as.dist(dissM), k.param = k)
   g <- igraph::graph_from_adjacency_matrix(adjmatrix = g$snn,
                                            mode = "undirected",
                                            weighted = TRUE)
