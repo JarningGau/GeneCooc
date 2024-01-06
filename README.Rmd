@@ -20,8 +20,9 @@ library("badger")
 [![Project Status: Active - The project has reached a stable, usable state and is being actively developed.](http://www.repostatus.org/badges/latest/active.svg)](http://www.repostatus.org/#active)
 `r badge_devel("jarninggau/GeneCooc", "green")`
 
-GeneCooc is an ultra-fast R package for gene co-expression module discovery facilitates cell state identification.
+`GeneCooc` is an ultra-fast R package for gene co-expression module discovery facilitates cell state identification.
 
+<img src="man/figures/GeneCooc-concept.png" width="600" />
 
 ## Installation
 

@@ -6,8 +6,10 @@ state and is being actively
 developed.](http://www.repostatus.org/badges/latest/active.svg)](http://www.repostatus.org/#active)
 [![](https://img.shields.io/badge/devel%20version-0.0.0.9000-green.svg)](https://github.com/jarninggau/GeneCooc)
 
-GeneCooc is an ultra-fast R package for gene co-expression module
+`GeneCooc` is an ultra-fast R package for gene co-expression module
 discovery facilitates cell state identification.
+
+<img src="man/figures/GeneCooc-concept.png" width="600" />
 
 ## Installation
 
