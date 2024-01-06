@@ -30,6 +30,7 @@ RoxygenNote: 7.2.3
 Collate: 
     'getters_and_setters.R'
     'GeneCooc.R'
+    'helpers.R'
     'module_merging.R'
     'variance_decomposition.R'
     'visualization.R'
