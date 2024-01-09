@@ -132,3 +132,28 @@ RescueModules <- function(object, modules, module.source="GeneCooc") {
   return(object)
 }
 
+
+#' Fetch Module Dimensionality Reduction Data
+#'
+#' This function retrieves dimensionality reduction data for gene modules
+#' from a specified slot within a given Seurat object.
+#'
+#' @param object A Seurat object containing module dimensionality reduction information.
+#' @param reduction A character string indicating which type of dimensionality reduction data
+#' to fetch. Default is "FDG" for Force-Directed Graph data.
+#' @param slot A character string specifying the module slot to retrieve data from.
+#' Default is "all" which would typically denote the combined results for all modules.
+#' @param module.source A character string specifying the key under which the module
+#' dimensionality reduction data is stored within the Seurat object's `misc` slot. Default is "GeneCooc".
+#'
+#' @return Returns a data structure containing the dimensionality reduction data.
+#' The exact structure will depend on how the data is stored within the provided Seurat object.
+#' @export
+FetchModuleDR <- function(
+    object,
+    reduction="FDG",
+    slot="all",
+    module.source="GeneCooc"
+){
+  return(object@misc[[module.source]]$module.DR[[reduction]][[slot]])
+}
