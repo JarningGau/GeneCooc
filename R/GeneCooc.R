@@ -154,10 +154,11 @@ CalAffinityMatrix <- function(object, K=500, min.freq=10, module.source="GeneCoo
 #' its `misc` slot.
 #' @param k Integer. Specifies the number of nearest neighbors to be used in the construction of
 #' the SNN (shared nearest neighbor) graph.
-#' @param resolution A double. Resolution parameter for the Louvain clustering algorithm. Controls
+#' @param resolution Numeric. Resolution parameter for the Louvain clustering algorithm. Controls
 #' the granularity of the clustering.
 #' @param min.module.size Integer. The minimum size of the modules to be detected in the dynamic
 #' tree cut.
+#' @param weight.cutoff Numeric. The cutoff value of weights for affinity matrix. Default is 0.1.
 #' @param module.source A character string indicating where to load tmp results and save final results
 #' of `GeneCooc`. Default is "GeneCooc".
 #'
@@ -165,9 +166,10 @@ CalAffinityMatrix <- function(object, K=500, min.freq=10, module.source="GeneCoo
 #' into the object's `misc` slot under `GeneCooc`.
 #'
 #' @export
-FindModules <- function(object, k=50, resolution=0.1, min.module.size=10, module.source="GeneCooc"){
+FindModules <- function(object, k=50, resolution=0.1, min.module.size=10, weight.cutoff=0.1, module.source="GeneCooc"){
   ## fetch data
   A <- Misc(object)[[module.source]]$affinity.matrix
+  A[A < weight.cutoff] <- 0
   dissM <- 1 - A
   ## find major modules
   g <- Seurat::FindNeighbors(as.dist(dissM), k.param = k)

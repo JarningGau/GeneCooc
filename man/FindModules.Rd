@@ -9,6 +9,7 @@ FindModules(
   k = 50,
   resolution = 0.1,
   min.module.size = 10,
+  weight.cutoff = 0.1,
   module.source = "GeneCooc"
 )
 }
@@ -19,11 +20,13 @@ its \code{misc} slot.}
 \item{k}{Integer. Specifies the number of nearest neighbors to be used in the construction of
 the SNN (shared nearest neighbor) graph.}
 
-\item{resolution}{A double. Resolution parameter for the Louvain clustering algorithm. Controls
+\item{resolution}{Numeric. Resolution parameter for the Louvain clustering algorithm. Controls
 the granularity of the clustering.}
 
 \item{min.module.size}{Integer. The minimum size of the modules to be detected in the dynamic
 tree cut.}
+
+\item{weight.cutoff}{Numeric. The cutoff value of weights for affinity matrix. Default is 0.1.}
 
 \item{module.source}{A character string indicating where to load tmp results and save final results
 of \code{GeneCooc}. Default is "GeneCooc".}
