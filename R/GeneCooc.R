@@ -335,7 +335,9 @@ CalModuleScore <- function(object, modules=NULL, ndim.mca=30, min.size=10, modul
   ## fetch data
   if (is.null(modules)) {
     mods <- Misc(object)[[module.source]]$gene.module
-    mods <- subset(mods, is.kept) ## drop the trimmed genes
+    if ("is.kept" %in% colnames(mods)) {
+      mods <- subset(mods, is.kept) ## drop the trimmed genes
+    }
     Y <- Loadings(object, reduction = "mca")[rownames(mods), 1:ndim.mca]
   } else {
     Y <- Loadings(object, reduction = "mca")[, 1:ndim.mca]
