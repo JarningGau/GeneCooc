@@ -334,7 +334,7 @@ RunModuleUMAP <- function(object, exclude.trimmed=TRUE, supervised=FALSE, module
 CalModuleScore <- function(object, modules=NULL, ndim.mca=30, min.size=10, module.source="GeneCooc") {
   ## fetch data
   if (is.null(modules)) {
-    mods <- Misc(object)[[module.source]]$gene.module
+    mods <- FetchModuleDF(object, module.source)
     if ("is.kept" %in% colnames(mods)) {
       mods <- subset(mods, is.kept) ## drop the trimmed genes
     }

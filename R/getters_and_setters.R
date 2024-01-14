@@ -54,7 +54,9 @@ FetchAffinityMatrix <- function(object, module.source="GeneCooc"){
 #' @export
 FetchModuleList <- function(object, module.source="GeneCooc", module.type="both", module.size=0) {
   mods <- FetchModuleDF(object, module.source)
-  mods <- subset(mods, is.kept) ## drop the trimmed genes
+  if ("is.kept" %in% colnames(mods)) {
+    mods <- subset(mods, is.kept) ## drop the trimmed genes
+  }
   major.modules <- sort(unique(mods$module))
   minor.modules <- sort(unique(mods$minor.module.full))
   major.module.list <- lapply(major.modules, function(xx) {
