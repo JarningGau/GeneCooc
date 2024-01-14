@@ -11,9 +11,9 @@ NULL
 
 ModuleDist <- function(object, module.source="GeneCooc", major.module=NULL) {
   A <- FetchAffinityMatrix(object, module.source)
-  module.list <- FetchModuleList(object, module.source, module.type = "minor")
-  mods <- FetchModuleDF(object, module.source)
-  mods <- subset(mods, is.kept) ## drop the trimmed genes
+  module.list <- FetchModuleList(object, module.source = module.source, module.type = "minor")
+  # mods <- subset(mods, is.kept) ## drop the trimmed genes
+  mods <- FetchModuleDF(object, is.trimmed = TRUE, module.source = module.source)
   if (!is.null(major.module)) {
     mods <- subset(mods, module == major.module)
   }
@@ -51,9 +51,9 @@ NextRelatedModulePairs <- function(object, module.source="GeneCooc", major.modul
 
 
 EstimateAccuracy <- function(object, module.1, module.2, module.source="GeneCooc", do.plot=TRUE) {
-  A <- FetchAffinityMatrix(object, module.source)
-  mods <- FetchModuleDF(object, module.source)
-  module.list <- FetchModuleList(object, module.source, module.type = "minor")
+  A <- FetchAffinityMatrix(object, module.source = module.source)
+  mods <- FetchModuleDF(object, module.source = module.source)
+  module.list <- FetchModuleList(object, module.source = module.source, module.type = "minor")
   genes.1 <- module.list[[module.1]]
   genes.2 <- module.list[[module.2]]
   all.genes <- c(genes.1, genes.2)
@@ -81,7 +81,7 @@ EstimateAccuracy <- function(object, module.1, module.2, module.source="GeneCooc
 
 MergeModules <- function(object, module.1, module.2, module.source="GeneCooc") {
   message(glue::glue("Merging {module.2} to {module.1}"))
-  mods <- FetchModuleDF(object, module.source)
+  mods <- FetchModuleDF(object, module.source = module.source)
   genes.1 <- rownames(subset(mods, minor.module.full == module.1))
   genes.2 <- rownames(subset(mods, minor.module.full == module.2))
   if (!"minor.module.full.before.merge" %in% colnames(mods)) {
@@ -93,8 +93,8 @@ MergeModules <- function(object, module.1, module.2, module.source="GeneCooc") {
 }
 
 .StatMinorModules <- function(object, module.source="GeneCooc", major.module=NULL) {
-  mods <- FetchModuleDF(object, module.source)
-  mods <- subset(mods, is.kept) ## drop the trimmed genes
+  mods <- FetchModuleDF(object, is.trimmed = TRUE, module.source = module.source)
+  # mods <- subset(mods, is.kept) ## drop the trimmed genes
   if (!is.null(major.module)) {
     mods <- subset(mods, module == major.module)
   }
@@ -120,7 +120,7 @@ MergeModules <- function(object, module.1, module.2, module.source="GeneCooc") {
 #'
 AutoMergeModules <- function(object, acc.threshold=0.9, module.source="GeneCooc"){
   ## fetch data
-  module.list <- FetchModuleList(object, module.source, module.type = "major")
+  module.list <- FetchModuleList(object, module.source = module.source, module.type = "major")
   for (major.module in names(module.list)) {
     message("===================")
     message(glue::glue("Processing {major.module} ..."))

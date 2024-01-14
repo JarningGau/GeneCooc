@@ -6,22 +6,25 @@
 \usage{
 FetchModuleList(
   object,
-  module.source = "GeneCooc",
+  is.trimmed = TRUE,
+  module.size = 0,
   module.type = "both",
-  module.size = 0
+  module.source = "GeneCooc"
 )
 }
 \arguments{
 \item{object}{A Seurat object.}
 
-\item{module.source}{A string specifying the key or named list within the Seurat object from
-which to retrieve the module information. The default value is "GeneCooc".}
+\item{is.trimmed}{Only return trimmed modules. Default: TRUE}
+
+\item{module.size}{Only returns the modules with sizes more than \code{module.size}. Default: 0.}
 
 \item{module.type}{A string specifying the type of gene modules to include in the output list:
 "both" for both major and minor modules, "major" for major modules only, or "minor" for minor modules
 only. The default value is "both".}
 
-\item{module.size}{Only returns the modules with sizes more than \code{module.size}. Default: 0.}
+\item{module.source}{A string specifying the key or named list within the Seurat object from
+which to retrieve the module information. The default value is "GeneCooc".}
 }
 \value{
 A list of gene names associated with the specified module source and type in the Seurat

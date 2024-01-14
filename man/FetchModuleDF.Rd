@@ -4,12 +4,21 @@
 \alias{FetchModuleDF}
 \title{Fetch Module Data Frame From Seurat Object}
 \usage{
-FetchModuleDF(object, module.source = "GeneCooc")
+FetchModuleDF(
+  object,
+  module.source = "GeneCooc",
+  module.size = 0,
+  is.trimmed = FALSE
+)
 }
 \arguments{
 \item{object}{A Seurat object.}
 
 \item{module.source}{A character string indicating where to fetch data. Default is "GeneCooc".}
+
+\item{module.size}{Only returns the modules with sizes more than \code{module.size}. Default: 0.}
+
+\item{is.trimmed}{Only return trimmed modules. Default: FALSE.}
 }
 \value{
 A data frame of gene modules from the specified source within the object.

@@ -7,12 +7,26 @@
 #'
 #' @param object A Seurat object.
 #' @param module.source A character string indicating where to fetch data. Default is "GeneCooc".
+#' @param module.size Only returns the modules with sizes more than `module.size`. Default: 0.
+#' @param is.trimmed Only return trimmed modules. Default: FALSE.
 #'
 #' @return A data frame of gene modules from the specified source within the object.
 #'
 #' @export
-FetchModuleDF <- function(object, module.source="GeneCooc"){
-  return(Misc(object)[[module.source]]$gene.module)
+FetchModuleDF <- function(object, module.source="GeneCooc", module.size=0, is.trimmed=FALSE){
+  mods <- Misc(object)[[module.source]]$gene.module
+  if (is.trimmed && "is.kept" %in% colnames(mods)) {
+    mods <- subset(mods, is.kept)
+  }
+  minor.modules <- sort(unique(mods$minor.module.full))
+  minor.module.list <- lapply(minor.modules, function(xx) {
+    subset(mods, minor.module.full == xx)$gene.name
+  })
+  names(minor.module.list) <- minor.modules
+  module.sizes <- sapply(minor.module.list, length)
+  minor.module.list <- minor.module.list[module.sizes >= module.size]
+  mods <- subset(mods, minor.module.full %in% names(minor.module.list))
+  return(mods)
 }
 
 
@@ -41,22 +55,23 @@ FetchAffinityMatrix <- function(object, module.source="GeneCooc"){
 #' Seurat object.
 #'
 #' @param object A Seurat object.
-#' @param module.source A string specifying the key or named list within the Seurat object from
-#' which to retrieve the module information. The default value is "GeneCooc".
+#' @param is.trimmed Only return trimmed modules. Default: TRUE
+#' @param module.size Only returns the modules with sizes more than `module.size`. Default: 0.
 #' @param module.type A string specifying the type of gene modules to include in the output list:
 #' "both" for both major and minor modules, "major" for major modules only, or "minor" for minor modules
 #' only. The default value is "both".
-#' @param module.size Only returns the modules with sizes more than `module.size`. Default: 0.
+#' @param module.source A string specifying the key or named list within the Seurat object from
+#' which to retrieve the module information. The default value is "GeneCooc".
 #'
 #' @return A list of gene names associated with the specified module source and type in the Seurat
 #' object. The list is organized based on the major and minor module categories, if applicable.
 # TODO: unbound names will cause bugs, solve these unbound names.
 #' @export
-FetchModuleList <- function(object, module.source="GeneCooc", module.type="both", module.size=0) {
-  mods <- FetchModuleDF(object, module.source)
-  if ("is.kept" %in% colnames(mods)) {
-    mods <- subset(mods, is.kept) ## drop the trimmed genes
-  }
+FetchModuleList <- function(object, is.trimmed=TRUE, module.size=0, module.type="both", module.source="GeneCooc") {
+  mods <- FetchModuleDF(object, module.source = module.source, module.size = module.size, is.trimmed = is.trimmed)
+  # if ("is.kept" %in% colnames(mods)) {
+  #   mods <- subset(mods, is.kept) ## drop the trimmed genes
+  # }
   major.modules <- sort(unique(mods$module))
   minor.modules <- sort(unique(mods$minor.module.full))
   major.module.list <- lapply(major.modules, function(xx) {
@@ -100,7 +115,7 @@ FetchModuleList <- function(object, module.source="GeneCooc", module.type="both"
 #'
 #' @export
 FetchArchetypeGenes <- function(object, modules, module.source="GeneCooc") {
-  mods <- FetchModuleDF(object, module.source)
+  mods <- FetchModuleDF(object, module.source = module.source)
   mods <- subset(mods, is.archetype)
   mods <- subset(mods, minor.module.full.before.merge %in% modules)
   genes <- mods$gene.name
@@ -128,7 +143,7 @@ FetchArchetypeGenes <- function(object, modules, module.source="GeneCooc") {
 #'
 #' @export
 RescueModules <- function(object, modules, module.source="GeneCooc") {
-  mods <- FetchModuleDF(object, module.source)
+  mods <- FetchModuleDF(object, module.source = module.source)
   mods[mods$minor.module.full %in% modules, "is.kept"] = TRUE
   object@misc[[module.source]]$gene.module <- mods
   return(object)

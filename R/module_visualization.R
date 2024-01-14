@@ -31,9 +31,9 @@ RunModuleFDG <- function(
     weight.cutoff = 0.1,
     on.module = NULL
 ){
-  module.list <- FetchModuleList(object, module.source, module.size = module.size)
-  module.DF <- FetchModuleDF(object, module.source)
-  A <- FetchAffinityMatrix(object, module.source)
+  module.list <- FetchModuleList(object, module.source = module.source, module.size = module.size)
+  module.DF <- FetchModuleDF(object, module.source = module.source)
+  A <- FetchAffinityMatrix(object, module.source = module.source)
   if (is.null(on.module)) {
     genes.use <- unique(base::Reduce(c, module.list))
   } else {
@@ -115,7 +115,7 @@ ModuleDimPlot <- function(
     line.color="grey",
     line.alpha=0.01
 ){
-  module.DR.list <- FetchModuleDR(object, reduction, slot, module.source)
+  module.DR.list <- FetchModuleDR(object, reduction = reduction, slot = slot, module.source = module.source)
   data.nodes <- module.DR.list$nodes
   data.links <- module.DR.list$links
   x <- paste0(reduction, "_1")
