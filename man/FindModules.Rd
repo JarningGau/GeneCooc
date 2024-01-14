@@ -10,7 +10,6 @@ FindModules(
   resolution = 0.1,
   min.module.size = 10,
   weight.cutoff = 0.1,
-  sub.module.only = FALSE,
   module.source = "GeneCooc"
 )
 }
@@ -28,8 +27,6 @@ the granularity of the clustering.}
 tree cut.}
 
 \item{weight.cutoff}{Numeric. The cutoff value of weights for affinity matrix. Default is 0.1.}
-
-\item{sub.module.only}{Logical. Whether clustering on sub module only. Default: FALSE.}
 
 \item{module.source}{A character string indicating where to load tmp results and save final results
 of \code{GeneCooc}. Default is "GeneCooc".}
