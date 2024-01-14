@@ -159,6 +159,7 @@ CalAffinityMatrix <- function(object, K=500, min.freq=10, module.source="GeneCoo
 #' @param min.module.size Integer. The minimum size of the modules to be detected in the dynamic
 #' tree cut.
 #' @param weight.cutoff Numeric. The cutoff value of weights for affinity matrix. Default is 0.1.
+#' @param sub.module.only Logical. Whether clustering on sub module only. Default: FALSE.
 #' @param module.source A character string indicating where to load tmp results and save final results
 #' of `GeneCooc`. Default is "GeneCooc".
 #'
@@ -166,36 +167,53 @@ CalAffinityMatrix <- function(object, K=500, min.freq=10, module.source="GeneCoo
 #' into the object's `misc` slot under `GeneCooc`.
 #'
 #' @export
-FindModules <- function(object, k=50, resolution=0.1, min.module.size=10, weight.cutoff=0.1, module.source="GeneCooc"){
+FindModules <- function(object, k=50, resolution=0.1, min.module.size=10, weight.cutoff=0.1, sub.module.only=FALSE, module.source="GeneCooc"){
   ## fetch data
   A <- Misc(object)[[module.source]]$affinity.matrix
   A[A < weight.cutoff] <- 0
   dissM <- 1 - A
   ## find major modules
-  g <- Seurat::FindNeighbors(as.dist(dissM), k.param = k)
-  g <- igraph::graph_from_adjacency_matrix(adjmatrix = g$snn,
-                                           mode = "undirected",
-                                           weighted = TRUE)
-  ## Louvain cluster
-  clusters <- igraph::cluster_louvain(g, resolution = resolution)
-  mods <- data.frame(
-    row.names = rownames(A),
-    gene.name = rownames(A),
-    module = paste0(glue::glue("{module.source}-M"), clusters$membership)
-  )
-
-  ## find sub-modules in each major module: dynamic tree cut
-  mods$minor.module <- NA
-  module.names <- sort(unique(mods$module))
-  for (mn in module.names) {
-    genes <- subset(mods, module == mn)$gene.name
-    D <- dissM[genes, genes]
-    gene.tree <- stats::hclust(d = as.dist(D), method = 'average')
-    dynamic.mods = dynamicTreeCut::cutreeDynamic(dendro = gene.tree, distM = D,
-                                                 minClusterSize = min.module.size)
-    mods[gene.tree$labels, 'minor.module'] <- dynamic.mods
+  if (!sub.module.only) {
+    g <- Seurat::FindNeighbors(as.dist(dissM), k.param = k)
+    g <- igraph::graph_from_adjacency_matrix(adjmatrix = g$snn,
+                                             mode = "undirected",
+                                             weighted = TRUE)
+    ## Louvain cluster
+    clusters <- igraph::cluster_louvain(g, resolution = resolution)
+    mods <- data.frame(
+      row.names = rownames(A),
+      gene.name = rownames(A),
+      module = paste0(glue::glue("{module.source}-M"), clusters$membership)
+    )
   }
-  mods$minor.module.full <- paste0(mods$module, '-', mods$minor.module)
+  ## find sub-modules in each major module: dynamic tree cut
+  if (sub.module.only) {
+    ## 2nd time to refine sub modules
+    mods <- FetchModuleDF(object, module.source = module.source)
+    module.names <- sort(unique(mods$module))
+    for (mn in module.names) {
+      genes <- subset(mods, module == mn)$gene.name
+      D <- dissM[genes, genes]
+      gene.tree <- stats::hclust(d = as.dist(D), method = 'average')
+      dynamic.mods = dynamicTreeCut::cutreeDynamic(dendro = gene.tree, distM = D,
+                                                   minClusterSize = min.module.size)
+      mods[gene.tree$labels, 'minor.module'] <- dynamic.mods
+    }
+    mods$minor.module.full <- paste0(mods$module, '-', mods$minor.module)
+  } else {
+    ## first time to identify sub modules
+    mods$minor.module <- NA
+    module.names <- sort(unique(mods$module))
+    for (mn in module.names) {
+      genes <- subset(mods, module == mn)$gene.name
+      D <- dissM[genes, genes]
+      gene.tree <- stats::hclust(d = as.dist(D), method = 'average')
+      dynamic.mods = dynamicTreeCut::cutreeDynamic(dendro = gene.tree, distM = D,
+                                                   minClusterSize = min.module.size)
+      mods[gene.tree$labels, 'minor.module'] <- dynamic.mods
+    }
+    mods$minor.module.full <- paste0(mods$module, '-', mods$minor.module)
+  }
   ## write results into Seurat object
   object@misc[[module.source]]$gene.module <- mods
   return(object)
@@ -334,7 +352,7 @@ RunModuleUMAP <- function(object, exclude.trimmed=TRUE, supervised=FALSE, module
 CalModuleScore <- function(object, modules=NULL, ndim.mca=30, min.size=10, module.source="GeneCooc") {
   ## fetch data
   if (is.null(modules)) {
-    mods <- FetchModuleDF(object, module.source)
+    mods <- FetchModuleDF(object, module.source = module.source)
     if ("is.kept" %in% colnames(mods)) {
       mods <- subset(mods, is.kept) ## drop the trimmed genes
     }
