@@ -148,3 +148,99 @@ ModuleDimPlot <- function(
           plot.title = element_text(hjust = .5, face = "bold"))
   plot
 }
+
+
+#' Create a Heatmap to Visualize Gene Module Affinity
+#'
+#' This function generates a heatmap to visualize gene interactions within specified modules
+#' based on an affinity matrix. The resulting heatmap can represent either major or minor
+#' gene modules and allows customization of color schemes.
+#'
+#' @param object A Seurat object.
+#' @param module.use A character vector specifying which modules to use for the heatmap.
+#' If "all", all available modules are selected. Default is "all".
+#' @param module.type A character string specifying whether to use "major" or "minor"
+#' modules for heatmap visualization. Default is "major".
+#' @param module.size An integer indicating the minimum number of genes a module must contain
+#' to be included in the analysis. Default is 10.
+#' @param colors A character vector of colors to use in the heatmap column annotation. If NULL,
+#' a default palette (ggsci::pal_d3) is provided. Default is NULL.
+#' @param module.source A character string specifying the source of the module data within
+#' the Seurat object. Defaults to "GeneCooc".
+#' @return Heatmap plot from the ComplexHeatmap package.
+#' @import ComplexHeatmap
+#' @export
+ModuleHeatmap <- function(object, module.use="all", module.type="major", module.size=10, colors = NULL, module.source="GeneCooc") {
+  A <- FetchAffinityMatrix(object, module.source = module.source)
+  module.list <- FetchModuleList(object, module.size = module.size, is.trimmed = TRUE, module.source = module.source)
+  module.DF <- FetchModuleDF(object, module.source = module.source, module.size = module.size, is.trimmed = TRUE)
+  if (class(module.use) == "character" && module.use == 'all') {
+    genes.use <- rownames(module.DF)
+  } else {
+    module.use <- intersect(module.use, names(module.list))
+    if (length(module.use) == 0) {
+      stop("No module was selected, please check 'module.use' parameter.")
+    }
+    module.list <- module.list[module.use]
+    genes.use <- unique(Reduce(c, module.list))
+    module.DF <- module.DF[genes.use, ]
+  }
+  A <- A[genes.use, genes.use]
+  if (module.type == "major") {
+    modules <- sort(unique(module.DF$module))
+  } else if (module.type == "minor") {
+    modules <- sort(unique(module.DF$minor.module.full))
+  } else {
+    stop("The parameter `module.type` should be one of 'major' or 'minor'.")
+  }
+  if (is.null(colors)) {
+    colors <- ggsci::pal_d3("category20")(length(modules))
+    names(colors) <- modules
+  } else if (length(colors) >= length(modules)) {
+    colors <- colors[1:length(modules)]
+    names(colors) <- modules
+  } else {
+    stop(glue::glue("Not enough colors (n={length(colors)}) for different modules (n={length(modules)})."))
+  }
+  if (module.type == "major") {
+    annot.df <- module.DF[, c("module"), drop=F]
+    names(annot.df) <- "major_module"
+    ha <- HeatmapAnnotation(df = annot.df,
+                            which = "col",
+                            col = list(major_module = colors))
+  } else if (module.type == "minor") {
+    annot.df <- module.DF[, c("minor.module.full"), drop=F]
+    names(annot.df) <- "minor_module"
+    ha <- HeatmapAnnotation(df = annot.df,
+                            which = "col",
+                            col = list(minor_module = colors))
+  } else {
+    stop("The parameter `module.type` should be one of 'major' or 'minor'.")
+  }
+  col_range <- c(0, 0.5, 1)
+  col_fun <- circlize::colorRamp2(col_range, c("blue", "white", "red"))
+  lgd <- Legend(
+    col_fun = col_fun,
+    title = "co-occurrance ratio",
+    at = col_range,
+    direction = "horizontal",
+    labels = c("low", "mid", "hight"),
+    legend_width = unit(1, "in"),
+    border = FALSE
+  )
+  ht <- Heatmap(
+    matrix = A,
+    top_annotation = ha,
+    name = "co-occurrance\nratio",
+    clustering_distance_rows = function(x) as.dist(1-x),
+    clustering_distance_columns = function(x) as.dist(1-x),
+    clustering_method_rows = "average",
+    clustering_method_columns = "average",
+    cluster_rows = TRUE,
+    cluster_columns = TRUE,
+    show_column_names = FALSE,
+    show_row_names = FALSE,
+    show_heatmap_legend = FALSE,
+  )
+  draw(ht, heatmap_legend_list = list(lgd), heatmap_legend_side = c("bottom"))
+}
