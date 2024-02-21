@@ -7,6 +7,8 @@ Authors@R:
 Description: GeneCooc: GeneCooc: an ultra-fast tool for gene co-expression
     module discovery facilitates cell state identification.
 License: MIT + file LICENSE
+Depends: 
+    R (>= 4.1.0)
 Imports: 
     circlize (>= 0.4.15),
     ComplexHeatmap (>= 2.10.0),
@@ -31,11 +33,13 @@ Suggests:
     proxy (>= 0.4.27),
     uwot (>= 0.1.16)
 Encoding: UTF-8
+LazyData: true
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.2.3
 Collate: 
     'getters_and_setters.R'
     'GeneCooc.R'
+    'data.R'
     'helpers.R'
     'module_merging.R'
     'module_visualization.R'
