@@ -16,7 +16,7 @@ CalModuleScore(
 \item{object}{A Seurat object containing gene module data in its \code{misc} slot,
 and embeddings from MCA.}
 
-\item{modules}{A data.frame containing two columns named \code{gene_name}, \code{module_name},
+\item{modules}{A gene set list or data.frame containing two columns named \code{gene_name}, \code{module_name},
 and one optional column named \code{weight}. Default: NULL.}
 
 \item{ndim.mca}{The number of dimensions to use from the multiple correspondence analysis

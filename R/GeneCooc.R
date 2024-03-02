@@ -317,7 +317,7 @@ RunModuleUMAP <- function(object, exclude.trimmed=TRUE, supervised=FALSE, module
 #'
 #' @param object A Seurat object containing gene module data in its `misc` slot,
 #' and embeddings from MCA.
-#' @param modules A data.frame containing two columns named `gene_name`, `module_name`,
+#' @param modules A gene set list or data.frame containing two columns named `gene_name`, `module_name`,
 #' and one optional column named `weight`. Default: NULL.
 #' @param ndim.mca The number of dimensions to use from the multiple correspondence analysis
 #' (MCA) embeddings for calculating the module scores. Default: 30.
@@ -333,6 +333,11 @@ RunModuleUMAP <- function(object, exclude.trimmed=TRUE, supervised=FALSE, module
 CalModuleScore <- function(object, modules=NULL, ndim.mca=30, min.size=10, module.source="GeneCooc") {
   ## fetch data
   if (is.null(modules)) {
+    if (is.list(modules)) {
+      modules <- tibble::enframe(modules, name = "module_name", value = "gene_name")
+      modules <- tidyr::unnest(modules, cols = gene_name)
+      modules <- modules[, 2:1]
+    }
     mods <- FetchModuleDF(object, module.source = module.source)
     if ("is.kept" %in% colnames(mods)) {
       mods <- subset(mods, is.kept) ## drop the trimmed genes
