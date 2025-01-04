@@ -16,7 +16,7 @@ Imports:
     ggplot2 (>= 3.4.3),
     ggsci (>= 3.0.0),
     magrittr (>= 2.0.3),
-    Seurat (>= 4.3.0.1),
+    Seurat (>= 4.2.0),
     tidydr (>= 0.0.5),
     tidyr (>= 1.3.0)
 Suggests: 
