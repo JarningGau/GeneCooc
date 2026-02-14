@@ -38,6 +38,7 @@ Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.2.3
 Collate: 
     'getters_and_setters.R'
+    'seurat_compat.R'
     'GeneCooc.R'
     'data.R'
     'helpers.R'

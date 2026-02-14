@@ -36,7 +36,7 @@ devtools::install_github("RausellLab/CelliD", ref="e306b43")
 devtools::install_github("JarningGau/GeneCooc")
 ```
 
-Note: `GeneCooc` is compitable with Seurat V4, we did not test the codes on Seurat V5.
+Note: `GeneCooc` now supports Seurat V4 and V5. The code path handles Seurat v5 assay layers (for example `counts`) while preserving Seurat v4 slot-based access.
 
 ## Quick start
 

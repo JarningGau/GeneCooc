@@ -1,4 +1,5 @@
 #' @include getters_and_setters.R
+#' @include seurat_compat.R
 NULL
 
 #' Calculate Gene Rankings
@@ -43,7 +44,7 @@ CalGeneRankings <- function(
     assay="RNA"
 ){
   ## get features
-  expr.mat <- GetAssayData(object, assay = assay, slot = 'counts')
+  expr.mat <- .GeneCoocGetCounts(object, assay = assay)
   if (is.null(features)) {
     min.expr.cells <- min(min.expr.cells, ncol(expr.mat) * min.expr.pct)
     expr.in.cells <- Matrix::rowSums(expr.mat > 0)
@@ -61,7 +62,7 @@ CalGeneRankings <- function(
     } else {
       object.list <- SplitObject(object, split.by = batch.name)
       for (i in seq_along(object.list)) {
-        object.list[[i]] <- FindVariableFeatures(object, nfeatures = nfeatures, selection.method = "vst")
+        object.list[[i]] <- FindVariableFeatures(object.list[[i]], nfeatures = nfeatures, selection.method = "vst")
       }
       VariableFeatures(object) <- SelectIntegrationFeatures(object.list = object.list, nfeatures = nfeatures)
     }
@@ -172,8 +173,8 @@ FindModules <- function(object, k=50, resolution=0.1, min.module.size=10, weight
   A[A < weight.cutoff] <- 0
   dissM <- 1 - A
   ## find major modules
-  g <- Seurat::FindNeighbors(as.dist(dissM), k.param = k)
-  g <- igraph::graph_from_adjacency_matrix(adjmatrix = g$snn,
+  snn.graph <- .GeneCoocFindNeighbors(dissM = dissM, k = k)
+  g <- igraph::graph_from_adjacency_matrix(adjmatrix = snn.graph,
                                            mode = "undirected",
                                            weighted = TRUE)
   ## Louvain cluster
