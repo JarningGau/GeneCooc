@@ -23,7 +23,7 @@ NULL
 #' @export
 VarDecompose <- function(object, vd.vars, assay="GeneCooc", cores=1) {
   ## fetch data
-  data <- t(GetAssayData(object, assay="GeneCooc", slot = "data"))
+  data <- as.matrix(Matrix::t(.GetAssayDataCompat(object, assay = "GeneCooc", layer = "data")))
   meta.data <- object@meta.data
   genes <- colnames(data)
   if (!all(vd.vars %in% colnames(meta.data))) {

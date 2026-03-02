@@ -43,7 +43,7 @@ CalGeneRankings <- function(
     assay="RNA"
 ){
   ## get features
-  expr.mat <- GetAssayData(object, assay = assay, slot = 'counts')
+  expr.mat <- .GetAssayDataCompat(object, assay = assay, layer = "counts")
   if (is.null(features)) {
     min.expr.cells <- min(min.expr.cells, ncol(expr.mat) * min.expr.pct)
     expr.in.cells <- Matrix::rowSums(expr.mat > 0)

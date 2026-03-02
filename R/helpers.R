@@ -9,3 +9,14 @@
 #' @return A numeric vector representing the softmax transformation of the input.
 #' @export
 softmax <- function(x) exp(x) / sum(exp(x))
+
+.GetAssayDataCompat <- function(object, assay, layer) {
+  res <- try(
+    do.call(GetAssayData, list(object = object, assay = assay, layer = layer)),
+    silent = TRUE
+  )
+  if (!inherits(res, "try-error") && !is.null(res)) {
+    return(res)
+  }
+  do.call(GetAssayData, list(object = object, assay = assay, slot = layer))
+}

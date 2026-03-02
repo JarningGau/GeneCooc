@@ -31,9 +31,11 @@ Suggests:
     Matrix (>= 1.6.1),
     pheatmap (>= 1.0.12),
     proxy (>= 0.4.27),
+    testthat (>= 3.0.0),
     uwot (>= 0.1.16)
 Encoding: UTF-8
 LazyData: true
+Config/testthat/edition: 3
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.2.3
 Collate: 
