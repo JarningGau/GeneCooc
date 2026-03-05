@@ -31,17 +31,17 @@ NULL
 #' @import Seurat
 #' @export
 CalGeneRankings <- function(
-    object,
-    min.expr.cells=20,
-    min.expr.pct=0.001,
-    nfeatures=8000,
-    features=NULL,
-    ndim.mca=30,
-    use.variable.features=TRUE,
-    batch.name=NULL,
-    module.source="GeneCooc",
-    assay="RNA"
-){
+  object,
+  min.expr.cells = 20,
+  min.expr.pct = 0.001,
+  nfeatures = 8000,
+  features = NULL,
+  ndim.mca = 30,
+  use.variable.features = TRUE,
+  batch.name = NULL,
+  module.source = "GeneCooc",
+  assay = "RNA"
+) {
   ## get features
   expr.mat <- .GetAssayDataCompat(object, assay = assay, layer = "counts")
   if (is.null(features)) {
@@ -52,10 +52,10 @@ CalGeneRankings <- function(
     features.use <- intersect(rownames(expr.mat), features)
   }
   if (length(features.use) == 0) {
-    stop('No features error.')
+    stop("No features error.")
   }
   ## find variable genes
-  if(use.variable.features) {
+  if (use.variable.features) {
     if (is.null(batch.name)) {
       object <- FindVariableFeatures(object, nfeatures = nfeatures, selection.method = "vst")
     } else {
@@ -72,12 +72,11 @@ CalGeneRankings <- function(
   gene.rankings <- CelliD::GetCellGeneRanking(object, dims = 1:ndim.mca)
   ## set results to object@misc slot
   object@misc[[module.source]] <- list(
-    "features.use" = features.use,  # vector (character)
+    "features.use" = features.use, # vector (character)
     "gene.rankings" = gene.rankings # list
   )
   return(object)
 }
-
 
 
 #' Calculate Affinity Matrix
@@ -103,21 +102,21 @@ CalGeneRankings <- function(
 #'
 #' @import Seurat
 #' @export
-CalAffinityMatrix <- function(object, K=500, min.freq=10, module.source="GeneCooc"){
+CalAffinityMatrix <- function(object, K = 500, min.freq = 10, module.source = "GeneCooc") {
   ## get top-K genes
   message("Fetching top K genes ...")
   gene.rankings <- Misc(object)[[module.source]]$gene.rankings
   features.use <- Misc(object)[[module.source]]$features.use
   sentences <- lapply(gene.rankings, function(xx) names(head(xx, K)))
   ## init affinity matrix
-  A <- matrix(0 , nrow = length(features.use), ncol = length(features.use))
+  A <- matrix(0, nrow = length(features.use), ncol = length(features.use))
   rownames(A) <- features.use
   colnames(A) <- rownames(A)
   ## calculate affinity (co-occurrence) matrix
   message("Calculating affinity matrix ...")
   batch.size <- round(length(sentences) / 10)
   process <- 0
-  for(i in seq_along(sentences)) {
+  for (i in seq_along(sentences)) {
     if (i %% batch.size == 0) {
       process <- process + 1
       message(glue::glue("Processing {process}/10 ..."))
@@ -129,13 +128,13 @@ CalAffinityMatrix <- function(object, K=500, min.freq=10, module.source="GeneCoo
   message("Trimming genes ...")
   idx <- diag(A) >= min.freq
   n.total.genes <- nrow(A)
-  n.dropped.genes <- table(idx)['FALSE']
+  n.dropped.genes <- table(idx)["FALSE"]
   message(glue::glue("{n.dropped.genes} of {n.total.genes} genes appeared less than {min.freq} times were dropped."))
   A <- A[idx, idx]
   message("Calculating Jaccard index ...")
   n.cells <- length(sentences)
   A_logit <- apply(A, 1, function(xx) (xx * n.cells) / (max(xx) * diag(A))) # logit
-  A <- apply(A, 1, function(xx) 2*xx / (max(xx) + diag(A))) ## jaccard index
+  A <- apply(A, 1, function(xx) 2 * xx / (max(xx) + diag(A))) ## jaccard index
   A[A_logit < 1] <- 0
   # A <- apply(A, 2, function(xx) xx / max(xx))
   # A <- (A + t(A)) / 2
@@ -166,16 +165,18 @@ CalAffinityMatrix <- function(object, K=500, min.freq=10, module.source="GeneCoo
 #' into the object's `misc` slot under `GeneCooc`.
 #'
 #' @export
-FindModules <- function(object, k=50, resolution=0.1, min.module.size=10, weight.cutoff=0.1, module.source="GeneCooc"){
+FindModules <- function(object, k = 50, resolution = 0.1, min.module.size = 10, weight.cutoff = 0.1, module.source = "GeneCooc") {
   ## fetch data
   A <- Misc(object)[[module.source]]$affinity.matrix
   A[A < weight.cutoff] <- 0
   dissM <- 1 - A
   ## find major modules
   g <- Seurat::FindNeighbors(as.dist(dissM), k.param = k)
-  g <- igraph::graph_from_adjacency_matrix(adjmatrix = g$snn,
-                                           mode = "undirected",
-                                           weighted = TRUE)
+  g <- igraph::graph_from_adjacency_matrix(
+    adjmatrix = g$snn,
+    mode = "undirected",
+    weighted = TRUE
+  )
   ## Louvain cluster
   clusters <- igraph::cluster_louvain(g, resolution = resolution)
   mods <- data.frame(
@@ -189,12 +190,14 @@ FindModules <- function(object, k=50, resolution=0.1, min.module.size=10, weight
   for (mn in module.names) {
     genes <- subset(mods, module == mn)$gene.name
     D <- dissM[genes, genes]
-    gene.tree <- stats::hclust(d = as.dist(D), method = 'average')
-    dynamic.mods = dynamicTreeCut::cutreeDynamic(dendro = gene.tree, distM = D,
-                                                 minClusterSize = min.module.size)
-    mods[gene.tree$labels, 'minor.module'] <- dynamic.mods
+    gene.tree <- stats::hclust(d = as.dist(D), method = "average")
+    dynamic.mods <- dynamicTreeCut::cutreeDynamic(
+      dendro = gene.tree, distM = D,
+      minClusterSize = min.module.size
+    )
+    mods[gene.tree$labels, "minor.module"] <- dynamic.mods
   }
-  mods$minor.module.full <- paste0(mods$module, '-', mods$minor.module)
+  mods$minor.module.full <- paste0(mods$module, "-", mods$minor.module)
   ## write results into Seurat object
   object@misc[[module.source]]$gene.module <- mods
   return(object)
@@ -224,7 +227,7 @@ FindModules <- function(object, k=50, resolution=0.1, min.module.size=10, weight
 #' @importFrom magrittr `%>%`
 #'
 #' @export
-TrimModules <- function(object, archetype.score.cutoff=0.5, delta.cutoff=0.2, module.source="GeneCooc") {
+TrimModules <- function(object, archetype.score.cutoff = 0.5, delta.cutoff = 0.2, module.source = "GeneCooc") {
   ## fetch data
   mods <- Misc(object)[[module.source]]$gene.module
   A <- Misc(object)[[module.source]]$affinity.matrix
@@ -232,15 +235,51 @@ TrimModules <- function(object, archetype.score.cutoff=0.5, delta.cutoff=0.2, mo
   module.names <- sort(unique(mods$minor.module.full))
   mods$is.kept <- FALSE
   mods$is.archetype <- FALSE
-  for (module.name in module.names[!endsWith(module.names, '-0')]) {
-    message(glue::glue('processing {module.name} ...'))
+  for (module.name in module.names[!endsWith(module.names, "-0")]) {
+    message(glue::glue("processing {module.name} ..."))
     genes <- subset(mods, minor.module.full == module.name)$gene.name
     a <- A[genes, genes]
     ## archetype analysis
-    ## while loop to aviod invalid results from archetypes()
+    if (!is.matrix(a) || nrow(a) < 2 || ncol(a) < 2) {
+      warning(glue::glue("Skip {module.name}: affinity submatrix has insufficient size ({nrow(a)}x{ncol(a)})."))
+      next
+    }
+    if (any(!is.finite(a))) {
+      n_bad <- sum(!is.finite(a))
+      warning(glue::glue("Non-finite values detected in affinity submatrix for {module.name} ({n_bad} entries). Replacing with 0."))
+      a[!is.finite(a)] <- 0
+    }
+    if (all(a == 0)) {
+      warning(glue::glue("Skip {module.name}: affinity submatrix is all zeros after sanitization."))
+      next
+    }
+    if (all(apply(a, 1, stats::sd) == 0) || all(apply(a, 2, stats::sd) == 0)) {
+      warning(glue::glue("Skip {module.name}: affinity submatrix is degenerate (zero variance)."))
+      next
+    }
+    ## avoid infinite loop if archetypes() fails / returns invalid results
     archetype.mat <- NULL
-    while (!is.matrix(archetype.mat)) {
-      archetype.mat <- archetypes::archetypes(a, k = 2, verbose = FALSE)$archetypes
+    max.tries <- 5
+    for (try_idx in seq_len(max.tries)) {
+      archetype.mat <- tryCatch(
+        archetypes::archetypes(a, k = 2, verbose = FALSE)$archetypes,
+        error = function(e) e
+      )
+      if (is.matrix(archetype.mat) && all(is.finite(archetype.mat))) {
+        break
+      }
+      if (inherits(archetype.mat, "error")) {
+        warning(glue::glue(
+          "Archetypes failed for {module.name} (try {try_idx}/{max.tries}): {conditionMessage(archetype.mat)}"
+        ))
+      } else {
+        warning(glue::glue("Archetypes returned invalid result for {module.name} (try {try_idx}/{max.tries}); retrying."))
+      }
+      archetype.mat <- NULL
+    }
+    if (!is.matrix(archetype.mat)) {
+      warning(glue::glue("Skip {module.name}: archetype analysis failed after {max.tries} tries."))
+      next
     }
     ## trim sub-modules
     delta <- abs(apply(archetype.mat, 2, diff))
@@ -281,12 +320,12 @@ TrimModules <- function(object, archetype.score.cutoff=0.5, delta.cutoff=0.2, mo
 #'
 #' @export
 #'
-RunModuleUMAP <- function(object, exclude.trimmed=TRUE, supervised=FALSE, module.source="GeneCooc", ...) {
+RunModuleUMAP <- function(object, exclude.trimmed = TRUE, supervised = FALSE, module.source = "GeneCooc", ...) {
   ## fetch data
   mods.origin <- Misc(object)[[module.source]]$gene.module
   mods <- Misc(object)[[module.source]]$gene.module
   A <- Misc(object)[[module.source]]$affinity.matrix
-  if (exclude.trimmed){
+  if (exclude.trimmed) {
     mods <- subset(mods, is.kept)
     A <- A[rownames(mods), rownames(mods)]
   }
@@ -294,9 +333,9 @@ RunModuleUMAP <- function(object, exclude.trimmed=TRUE, supervised=FALSE, module
   diag(dissM) <- 0
   ## unsupervised UMAP
   if (supervised) {
-    embeddings <-  uwot::umap(X = as.dist(dissM), y = mods$minor.module.full, ...)
+    embeddings <- uwot::umap(X = as.dist(dissM), y = mods$minor.module.full, ...)
   } else {
-    embeddings <-  uwot::umap(X = as.dist(dissM), ...)
+    embeddings <- uwot::umap(X = as.dist(dissM), ...)
   }
   mods.origin$UMAP_1 <- NA
   mods.origin$UMAP_2 <- NA
@@ -330,7 +369,7 @@ RunModuleUMAP <- function(object, exclude.trimmed=TRUE, supervised=FALSE, module
 #'
 #' @export
 #'
-CalModuleScore <- function(object, modules=NULL, ndim.mca=30, min.size=10, module.source="GeneCooc") {
+CalModuleScore <- function(object, modules = NULL, ndim.mca = 30, min.size = 10, module.source = "GeneCooc") {
   ## fetch data
   if (is.null(modules)) {
     if (is.list(modules)) {
@@ -379,7 +418,7 @@ CalModuleScore <- function(object, modules=NULL, ndim.mca=30, min.size=10, modul
   }
   ## calculate gene to cell distance
   Z <- proxy::dist(X, Y, method = "Euclidean")
-  Z <- scale(t(1/Z))
+  Z <- scale(t(1 / Z))
   rownames(Z) <- rownames(Y) # rows: genes
   colnames(Z) <- rownames(X) # cols: cells
   ## module score
