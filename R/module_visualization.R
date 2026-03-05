@@ -25,12 +25,12 @@ NULL
 #'
 #' @export
 RunModuleFDG <- function(
-    object,
-    module.source="GeneCooc",
-    module.size = 10,
-    weight.cutoff = 0.1,
-    on.module = NULL
-){
+  object,
+  module.source = "GeneCooc",
+  module.size = 10,
+  weight.cutoff = 0.1,
+  on.module = NULL
+) {
   module.list <- FetchModuleList(object, module.source = module.source, module.size = module.size)
   module.DF <- FetchModuleDF(object, module.source = module.source)
   A <- FetchAffinityMatrix(object, module.source = module.source)
@@ -42,10 +42,12 @@ RunModuleFDG <- function(
   }
   A <- A[genes.use, genes.use]
   A[A < weight.cutoff] <- 0
-  g <- igraph::graph_from_adjacency_matrix(adjmatrix = A,
-                                           mode = "undirected",
-                                           weighted = TRUE,
-                                           add.colnames = TRUE)
+  g <- igraph::graph_from_adjacency_matrix(
+    adjmatrix = A,
+    mode = "undirected",
+    weighted = TRUE,
+    add.colnames = "name"
+  )
   fr.layout <- igraph::layout_with_fr(g)
   fr.layout <- as.data.frame(fr.layout)
   colnames(fr.layout) <- paste0("FDG_", 1:2)
@@ -54,7 +56,7 @@ RunModuleFDG <- function(
   fr.layout$minor.modules <- module.DF[rownames(fr.layout), "minor.module.full"]
   data.nodes <- fr.layout
   data.links <- as.data.frame(A)
-  data.links <- data.links %>% mutate(from = rownames(.), .before=1)
+  data.links <- data.links %>% mutate(from = rownames(.), .before = 1)
   data.links <- data.links %>% pivot_longer(cols = 2:ncol(.), names_to = "to", values_to = "weight")
   data.links <- subset(data.links, weight > 0)
   data.links <- subset(data.links, from != to)
@@ -104,36 +106,69 @@ RunModuleFDG <- function(
 #' @importFrom tidydr theme_dr
 #' @export
 ModuleDimPlot <- function(
-    object,
-    reduction="FDG",
-    group.by="major.modules",
-    slot="all",
-    module.source="GeneCooc",
-    pt.size = 1,
-    pt.border=NULL,
-    pt.colors=NULL,
-    line.color="grey",
-    line.alpha=0.01
-){
+  object,
+  reduction = "FDG",
+  group.by = "major.modules",
+  slot = "all",
+  module.source = "GeneCooc",
+  pt.size = 1,
+  pt.border = NULL,
+  pt.colors = NULL,
+  line.color = "grey",
+  line.alpha = 0.01
+) {
   module.DR.list <- FetchModuleDR(object, reduction = reduction, slot = slot, module.source = module.source)
   data.nodes <- module.DR.list$nodes
   data.links <- module.DR.list$links
   x <- paste0(reduction, "_1")
   y <- paste0(reduction, "_2")
-  plot <- ggplot(data.nodes, aes(get(x), get(y))) +
-    geom_segment(inherit.aes = F, data = data.links,
-                 mapping = aes(x=x1, y=y1, xend=x2, yend=y2, linewidth=weight),
-                 alpha=line.alpha, color = line.color, show.legend = F)
+  link_coord_cols <- c("x1", "y1", "x2", "y2")
+  if (nrow(data.links) > 0 && !all(link_coord_cols %in% colnames(data.links))) {
+    if (all(c("from", "to") %in% colnames(data.links)) && all(c(x, y) %in% colnames(data.nodes))) {
+      data.links$x1 <- data.nodes[as.character(data.links$from), x]
+      data.links$y1 <- data.nodes[as.character(data.links$from), y]
+      data.links$x2 <- data.nodes[as.character(data.links$to), x]
+      data.links$y2 <- data.nodes[as.character(data.links$to), y]
+    }
+  }
+  if (!"weight" %in% colnames(data.links)) {
+    data.links$weight <- 1
+  }
+
+  # Drop nodes/edges with missing coordinates to avoid ggplot warnings.
+  keep_nodes <- stats::complete.cases(data.nodes[, c(x, y), drop = FALSE])
+  data.nodes <- data.nodes[keep_nodes, , drop = FALSE]
+  if (nrow(data.links) > 0 && all(link_coord_cols %in% colnames(data.links))) {
+    keep_links <- stats::complete.cases(data.links[, link_coord_cols, drop = FALSE])
+    data.links <- data.links[keep_links, , drop = FALSE]
+  }
+
+  plot <- ggplot(data.nodes, aes(get(x), get(y)))
+  if (nrow(data.links) > 0 && all(c(link_coord_cols, "weight") %in% colnames(data.links))) {
+    plot <- plot + geom_segment(
+      inherit.aes = F, data = data.links,
+      mapping = aes(x = x1, y = y1, xend = x2, yend = y2, linewidth = weight),
+      alpha = line.alpha, color = line.color, show.legend = F
+    )
+  }
   if (!is.null(pt.border)) {
     plot <- plot + geom_point(size = pt.size + pt.border, color = "black")
   }
   plot <- plot +
     geom_point(aes(color = get(group.by)), size = pt.size) +
-    scale_linewidth_continuous(breaks = seq(0,1,.2), range = range(0,1))
-  if (is.null(pt.colors)){
-    plot <- plot + ggsci::scale_color_d3("category20")
+    scale_linewidth_continuous(breaks = seq(0, 1, .2), range = range(0, 1))
+  if (is.null(pt.colors)) {
+    group_values <- unique(as.character(data.nodes[[group.by]]))
+    group_values <- sort(group_values[!is.na(group_values)])
+    if (length(group_values) <= 20) {
+      auto_colors <- ggsci::pal_d3("category20")(length(group_values))
+    } else {
+      auto_colors <- grDevices::hcl.colors(length(group_values), palette = "Dynamic")
+    }
+    names(auto_colors) <- group_values
+    plot <- plot + ggplot2::scale_color_manual(values = auto_colors, na.value = "grey80")
   } else {
-    plot <- plot + scale_color_manual(values = pt.colors)
+    plot <- plot + ggplot2::scale_color_manual(values = pt.colors, na.value = "grey80")
   }
   if (slot == "all") {
     title <- "Gene co-occurrance network"
@@ -142,10 +177,12 @@ ModuleDimPlot <- function(
   }
   plot <- plot +
     ggtitle(title) + xlab(x) + ylab(y) +
-    guides(color = guide_legend(title = "Gene module", override.aes = list(size = 2, alpha=1))) +
+    guides(color = guide_legend(title = "Gene module", override.aes = list(size = 2, alpha = 1))) +
     tidydr::theme_dr() +
-    theme(panel.grid = element_blank(),
-          plot.title = element_text(hjust = .5, face = "bold"))
+    theme(
+      panel.grid = element_blank(),
+      plot.title = element_text(hjust = .5, face = "bold")
+    )
   plot
 }
 
@@ -170,11 +207,11 @@ ModuleDimPlot <- function(
 #' @return Heatmap plot from the ComplexHeatmap package.
 #' @import ComplexHeatmap
 #' @export
-ModuleHeatmap <- function(object, module.use="all", module.type="major", module.size=10, colors = NULL, module.source="GeneCooc") {
+ModuleHeatmap <- function(object, module.use = "all", module.type = "major", module.size = 10, colors = NULL, module.source = "GeneCooc") {
   A <- FetchAffinityMatrix(object, module.source = module.source)
   module.list <- FetchModuleList(object, module.size = module.size, is.trimmed = TRUE, module.source = module.source)
   module.DF <- FetchModuleDF(object, module.source = module.source, module.size = module.size, is.trimmed = TRUE)
-  if (class(module.use) == "character" && module.use == 'all') {
+  if (class(module.use) == "character" && module.use == "all") {
     genes.use <- rownames(module.DF)
   } else {
     module.use <- intersect(module.use, names(module.list))
@@ -194,7 +231,11 @@ ModuleHeatmap <- function(object, module.use="all", module.type="major", module.
     stop("The parameter `module.type` should be one of 'major' or 'minor'.")
   }
   if (is.null(colors)) {
-    colors <- ggsci::pal_d3("category20")(length(modules))
+    if (length(modules) <= 20) {
+      colors <- ggsci::pal_d3("category20")(length(modules))
+    } else {
+      colors <- grDevices::hcl.colors(length(modules), palette = "Dynamic")
+    }
     names(colors) <- modules
   } else if (length(colors) >= length(modules)) {
     colors <- colors[1:length(modules)]
@@ -203,17 +244,21 @@ ModuleHeatmap <- function(object, module.use="all", module.type="major", module.
     stop(glue::glue("Not enough colors (n={length(colors)}) for different modules (n={length(modules)})."))
   }
   if (module.type == "major") {
-    annot.df <- module.DF[, c("module"), drop=F]
+    annot.df <- module.DF[, c("module"), drop = F]
     names(annot.df) <- "major_module"
-    ha <- HeatmapAnnotation(df = annot.df,
-                            which = "col",
-                            col = list(major_module = colors))
+    ha <- HeatmapAnnotation(
+      df = annot.df,
+      which = "col",
+      col = list(major_module = colors)
+    )
   } else if (module.type == "minor") {
-    annot.df <- module.DF[, c("minor.module.full"), drop=F]
+    annot.df <- module.DF[, c("minor.module.full"), drop = F]
     names(annot.df) <- "minor_module"
-    ha <- HeatmapAnnotation(df = annot.df,
-                            which = "col",
-                            col = list(minor_module = colors))
+    ha <- HeatmapAnnotation(
+      df = annot.df,
+      which = "col",
+      col = list(minor_module = colors)
+    )
   } else {
     stop("The parameter `module.type` should be one of 'major' or 'minor'.")
   }
@@ -225,15 +270,15 @@ ModuleHeatmap <- function(object, module.use="all", module.type="major", module.
     at = col_range,
     direction = "horizontal",
     labels = c("low", "mid", "hight"),
-    legend_width = unit(1, "in"),
+    legend_width = grid::unit(1, "in"),
     border = FALSE
   )
   ht <- Heatmap(
     matrix = A,
     top_annotation = ha,
     name = "co-occurrance\nratio",
-    clustering_distance_rows = function(x) as.dist(1-x),
-    clustering_distance_columns = function(x) as.dist(1-x),
+    clustering_distance_rows = function(x) as.dist(1 - x),
+    clustering_distance_columns = function(x) as.dist(1 - x),
     clustering_method_rows = "average",
     clustering_method_columns = "average",
     cluster_rows = TRUE,
